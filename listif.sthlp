@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  06jan2021}{...}
+{* *! version 1.1  07may2022}{...}
 {viewerdialog listif "dialog listif"}{...}
 {vieweralsosee "[D] listif" "mansection D listif"}{...}
 {vieweralsosee "" "--"}{...}
@@ -31,17 +31,17 @@
 formats{p_end}
 {synopt :{opt sort:}}varlist determining sorting of list
 
-
 {syntab :Options}
 {synopt :{opt n:}}number of individuals listed, default is 10{p_end}
 {synopt :{opt seed:}}seed, seed can not be set to -88888{p_end}
 {synopt :{opt nolab:el}}no value lables{p_end}
+{synopt :{opt string(#):}}truncate string variables to # display columns (default 30){p_end}
 
 {marker examples}{...}
 {title:Examples}
 
-{phang}{cmd:. sysuse bplong.dta}{p_end}
-{phang}{cmd:. listif patient sex agegrp when bp if bp==153, id(patient) sort(patient) sepby(patient when) n(5)}{p_end}
+{phang}{cmd:. sysuse} bplong.dta{p_end}
+{phang}{cmd:. listif} patient sex agegrp when bp if bp==153, id(patient) sort(patient) sepby(patient when) n(5){p_end}
 
 
 

@@ -11,7 +11,7 @@
 		* listif patient treatment_date nappi_code icd10_code atccode if nappi_code=="800325", id(patient) sort(patient treatment_date nappi_code) sepby(patient treatment_date) n(3) seed(100)
 		capture program drop listif
 		program define listif
-		* version 1.0  AH 6 Jan 2021 
+		* version 1.1  07may2022
 			version 16
 			syntax [varlist] [if] [in], ID(varname) SORT(varlist) [ SEPBY(varlist) N(integer 10) SEED(integer -88888) NOLABel STRING(integer 30) ]
 			marksample touse, novarlist

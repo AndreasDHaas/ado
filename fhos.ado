@@ -3,7 +3,7 @@ program define fhos
 * version 2.1  AH 6 May 2022 
 	* syntax checking enforces that variables specified in IF are included in master table. 
 	* workaround: original dataset is preserved. Variables specified in IF and not included in master table are generate before systax checking and original dataset restored thereafter
-		*use "$clean/HOS", clear
+		use "$clean/HOS", clear
 		*ds, has(type string)
 		*di "`r(varlist)'"
 		*ds, not(type string)
@@ -39,7 +39,7 @@ program define fhos
 		di "" 
 		di "" 
 		di in red "listpatient: all"
-		list patient adm_date dis_date duration code_type hosp_code code_role code_description age if patient =="`listpatient'", sepby(patient) 
+		list patient adm_date dis_date duration code_type hosp_code code_role code_description age if patient =="`listpatient'", sepby(patient) string(20) 
 	}
 	* select relevant diagnoses 
 	marksample touse, novarlist

@@ -13,7 +13,7 @@
 		program define listif
 		* version 1.0  AH 6 Jan 2021 
 			version 16
-			syntax [varlist] [if] [in], ID(varname) SORT(varlist) [ SEPBY(varlist) N(integer 10) SEED(integer -88888) NOLABel ]
+			syntax [varlist] [if] [in], ID(varname) SORT(varlist) [ SEPBY(varlist) N(integer 10) SEED(integer -88888) NOLABel STRING(integer 30) ]
 			marksample touse, novarlist
 			if `seed' != -88888 set seed `seed'
 			preserve
@@ -28,12 +28,12 @@
 			capture confirm numeric variable `id' 
 			if !_rc {
 				foreach j in `r(levels)' {
-						list `varlist' if `id' ==`j', sepby(`sepby') `nolabel'
+						list `varlist' if `id' ==`j', sepby(`sepby') `nolabel' string(`string')
 				}
 			}
 			else {
 				foreach j in `r(levels)' {
-						list `varlist' if `id' =="`j'", sepby(`sepby') `nolabel'
+						list `varlist' if `id' =="`j'", sepby(`sepby') `nolabel' string(`string')
 				}			
 			}
 		end

@@ -1,69 +1,123 @@
 capture program drop fdrug
 program define fdrug
-* version 2.0  AH 22 April 2022 
-	capture gen med_id ="" // generate med_id to trick syntax checking (if variable has to exist)
-	syntax newvarname using if , [ MINAGE(integer 0) MINDATE(string) MAXDATE(string) LABel(string) N Y LIST(integer 9999) listall(integer 9999)]
-	drop med_id
+* version 2.1  AH 6 May 2022 
+	* syntax checking enforces that variables specified in IF are included in master table. 
+	* workaround: original dataset is preserved. Variables specified in IF and not included in master table are generate before systax checking and original dataset restored thereafter
+		*use "$clean/MED_ATC_B", clear
+		*ds, has(type string)
+		*di "`r(varlist)'"
+		*ds, not(type string)
+		*di "`r(varlist)'"		
+	preserve 
+	foreach var in patient med_id strength type nappi_code nappi_suffix nappi_description icd10_code {
+		qui capture gen `var' = ""
+	}
+	foreach var in med_sd quantity account_amount tariff_amount process_month pmb_indicator age {
+		qui capture gen `var' = .
+	}	
+	* syntax 
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate ] 
+	restore 
 	* confirm newvarname does not exist 
-	capture confirm variable `varlist'_d
-	if !_rc {
-		display in red "`varlist' already exists"
-		exit 198
+	if "`nogenerate'" =="" { 
+		capture confirm variable `varlist'_d
+		if !_rc {
+			display in red "`varlist' already exists"
+			exit 198
+		}
 	}
 	qui preserve
-	qui use `using', clear
-	* generate indicator variable sepcified in newvarname
-	qui gen `varlist'_y = 1
-	* select relevant medications 
-	marksample touse
+	use `using', clear
+	*describe
+	if "`describe'" !="" {
+		describe
+	}
+	* listpatient
+	if "`listpatient'" !="" {
+		di "" 
+		di "" 
+		di in red "listpatient: all"
+		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
+	}
+	* select relevant diagnoses 
+	marksample touse, novarlist
 	qui drop if !`touse'
-	* list 
-	if "`listall'" !="9999" {
-		di " --- listall start ---"
-		listif patient med_sd med_id quantity nappi_code nappi_suffix nappi_description, id(patient) sort(patient med_sd) n(`list')  sepby(pat) 
-		di " --- listall end ---"
+	* list
+	if "`list'" !="0" {
+		di in red " --- list start ---"
+		listif patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age, id(patient) sort(patient med_sd) n(`list')  sepby(patient) 
+		di in red " --- list end ---"
 	}
-	* drop medication that was returned or zero quant
-	qui bysort patient med_sd nappi_code: egen quantity1 = total(quantity)
-	qui replace quantity = quantity1
-	qui drop quantity1
-	qui drop if quantity <=0 
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: meeting if conditions"
+		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
+	}
 	* select age 
-	qui capture mmerge patient using "$clean/BAS", ukeep(birth_d) unmatched(master)
-	if "`minage'" !="" qui drop if floor((med_sd - birth_d)/365) < `minage'
-	qui drop birth_d 
-	* select time 
-	if "`mindate'" != "" qui drop if med_sd < `mindate'
-	if "`maxdate'" != "" qui drop if med_sd > `maxdate'
-	if "`list'" !="9999" {
-		di " --- list start ---"
-		listif patient med_sd med_id quantity nappi_code nappi_suffix nappi_description, id(patient) sort(patient med_sd) n(`list')  sepby(pat) 
-		di " --- list end ---"
+	if "`minage'" !="" qui drop if age < `minage' 
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: >= minage"
+		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
 	}
-	* Number of claims 
+	if "`maxage'" !="" qui drop if age > `maxage' & age !=. 
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: <= maxage"
+		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
+	}
+	* mindate 
+	if "`mindate'" != "" qui drop if med_sd < `mindate'
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: >= mindate"
+		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
+	}
+	* maxdate
+	if "`maxdate'" != "" qui drop if med_sd > `maxdate' & med_sd !=. 
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: <= maxdate"
+		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
+	}
+	* number of diagnoses 
 	qui bysort patient med_sd: keep if _n ==1
-	qui bysort patient (med_sd): gen `varlist'_n =_N
-	
-	* select first medicaton event 
+	if "`listpatient'" !="" {
+		di in red "listpatient: keep one record per date"
+		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
+	}
+	* n 
+	if "`n'" != "" qui bysort patient (med_sd): gen `varlist'_n =_N	
+	* generate indicator variable sepcified in newvarname
+	if "`y'" != "" {
+		qui gen `varlist'_y = 1
+		* label 
+			if "`label'" != "" {
+				label define  `varlist'_y 1 "`label'" 
+				lab val `varlist'_y `varlist'_y
+			}
+	}
+	* select first diag event 
 	qui bysort patient (med_sd): keep if _n ==1
-	* clean
-	qui keep patient med_sd `varlist'_y `varlist'_n
 	* event date 
 	qui rename med_sd `varlist'_d
-	* label 
-    if "`label'" != "" {
-		label define  `varlist'_y 1 "`label'" 
-		lab val `varlist'_y `varlist'_y
+	if "`listpatient'" !="" {
+		di in red "listpatient: keep first event"
+		list patient `varlist'_* if patient =="`listpatient'", sepby(patient) 
 	}
+	* clean
+	qui keep patient `varlist'_*
 	* order and apply n and y options
-	order patient `varlist'_d `varlist'_y `varlist'_n
-    if "`n'" == "" drop `varlist'_n
-    if "`y'" == "" drop `varlist'_y	
+	order patient `varlist'_d 
 	* save events
 	qui tempfile events
 	qui save `events'
 	* merge events to original dataset 
 	restore 
-	qui merge 1:1 patient using `events', keep(match master) nogen
-	if "`y'" != "" qui replace `varlist'_y = 0 if `varlist'_y ==. 
+	if "`nogenerate'" =="" { 
+		qui merge 1:1 patient using `events', keep(match master) nogen
+		if "`y'" != "" {
+			qui replace `varlist'_y = 0 if `varlist'_y ==. 
+		}
+	}
 end

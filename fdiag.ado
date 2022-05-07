@@ -13,8 +13,6 @@ program define fdiag
 	* syntax 
 	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate ] 
 	restore 
-	* drop generated variables 
-	*capture drop `L'
 	* confirm newvarname does not exist 
 	if "`nogenerate'" =="" { 
 		capture confirm variable `varlist'_d
@@ -25,6 +23,7 @@ program define fdiag
 	}
 	qui preserve
 	use `using', clear
+	*describe
 	if "`describe'" !="" {
 		describe
 		lab list source 

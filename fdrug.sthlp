@@ -35,7 +35,7 @@
 {synopt :{opt n:}}generates newvar_n containing the number of claims in age and date range meeting the if condition and are on different dates {p_end}
 {synopt :{opt y:}}generates the binary indicator newvar_y for the presence of a pharmacy claim in age and date range meeting the if condition {p_end}
 {synopt :{opt label(string):}}labels value 1 of newvar_y with string{p_end}
-{synopt :{opt list(N):}}lists claims meeting the if condition of a random sample of N patients. The ado file listif is required for this option. {p_end}
+{synopt :{opt list(#):}}lists claims meeting the if condition of a random sample of # patients. The ado file listif is required for this option. {p_end}
 {synopt :{opt listpat:ient(patient)}}lists claims of specified patient id before and after applying age and date restrictions {p_end}
 {synopt :{opt desc:ribe}}specifies the using dataset and coding of its variables are described {p_end}
 {synopt :{opt nogen:erate}}specifies that newvar_* not be created {p_end}

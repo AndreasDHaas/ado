@@ -2,39 +2,41 @@ capture program drop fdiag
 program define fdiag
 * version 2.1  AH 6 May 2022 
 	* syntax checking enforces that variables specified in IF are included in master table. 
-	* workaround: variables specified in IF and not included in master table are generate before systax checking and dropped therafter 
-	* generate non-existing variables 
-	local L = ""
-	foreach var in patient icd10_date icd10_code source icd10_type discharge_date code_role icd10_type icd_1 icd_23 age {
-	capture confirm variable `var'
-		if !_rc ==0 { 
-				local L = "`L'" + " " + "`var'" 
-				if inlist("`var'", "patient", "icd10_code", "code_role", "icd_1")	{	
-					qui gen `var' = ""
-				}
-				else  {
-					qui gen `var' = . 
-				}
-		}
+	* workaround: original dataset is preserved. Variables specified in IF and not included in master table are generate before systax checking and original dataset restored thereafter
+	preserve 
+	foreach var in patient icd10_code code_role icd_1 {
+		qui capture gen `var' = ""
 	}
+	foreach var in icd10_date source discharge_date icd10_type icd_23 age {
+		qui capture gen `var' = .
+	}	
 	* syntax 
-	syntax newvarname using if , [ MINAGE(integer 0) MINDATE(string) MAXDATE(string) LABel(string) N Y LIST(integer 0) listall(integer 0) LISTPATient(string) ] 
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate ] 
+	restore 
 	* drop generated variables 
-	capture drop `L'
+	*capture drop `L'
 	* confirm newvarname does not exist 
-	capture confirm variable `varlist'_d
-	if !_rc {
-		display in red "`varlist' already exists"
-		exit 198
+	if "`nogenerate'" =="" { 
+		capture confirm variable `varlist'_d
+		if !_rc {
+			display in red "`varlist' already exists"
+			exit 198
+		}
 	}
 	qui preserve
 	use `using', clear
+	if "`describe'" !="" {
+		describe
+		lab list source 
+		lab list icd10_type
+		tab code_role, mi
+	}
 	* listpatient
 	if "`listpatient'" !="" {
 		di "" 
 		di "" 
 		di in red "listpatient: all"
-		list patient icd10_date icd10_code source icd10_type age if patient =="`listpatient'", sepby(patient) 
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* select relevant diagnoses 
 	marksample touse, novarlist
@@ -42,40 +44,46 @@ program define fdiag
 	* list
 	if "`list'" !="0" {
 		di in red " --- list start ---"
-		listif patient icd10_date icd10_code source icd10_type age, id(patient) sort(patient icd10_date) n(`list')  sepby(patient) 
+		listif patient icd10_date discharge_date icd10_code source icd10_type code_role age, id(patient) sort(patient icd10_date) n(`list')  sepby(patient) 
 		di in red " --- list end ---"
 	}
 	* listpatient
 	if "`listpatient'" !="" {
 		di in red "listpatient: meeting if conditions"
-		list patient icd10_date icd10_code source icd10_type age if patient =="`listpatient'", sepby(patient) 
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* select age 
-	if "`minage'" !="" qui drop if age < `minage'
+	if "`minage'" !="" qui drop if age < `minage' 
 	* listpatient
 	if "`listpatient'" !="" {
 		di in red "listpatient: >= minage"
-		list patient icd10_date icd10_code source icd10_type age if patient =="`listpatient'", sepby(patient) 
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
+	}
+	if "`maxage'" !="" qui drop if age > `maxage' & age !=. 
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: <= maxage"
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* mindate 
 	if "`mindate'" != "" qui drop if icd10_date < `mindate'
 	* listpatient
 	if "`listpatient'" !="" {
 		di in red "listpatient: >= mindate"
-		list patient icd10_date icd10_code source icd10_type age if patient =="`listpatient'", sepby(patient) 
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* maxdate
-	if "`maxdate'" != "" qui drop if icd10_date > `maxdate'
+	if "`maxdate'" != "" qui drop if icd10_date > `maxdate' & icd10_date !=. 
 	* listpatient
 	if "`listpatient'" !="" {
 		di in red "listpatient: <= maxdate"
-		list patient icd10_date icd10_code source icd10_type age if patient =="`listpatient'", sepby(patient) 
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* number of diagnoses 
 	qui bysort patient icd10_date: keep if _n ==1
 	if "`listpatient'" !="" {
 		di in red "listpatient: keep one record per date"
-		list patient icd10_date icd10_code source icd10_type age if patient =="`listpatient'", sepby(patient) 
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* n 
 	if "`n'" != "" qui bysort patient (icd10_date): gen `varlist'_n =_N	
@@ -105,6 +113,10 @@ program define fdiag
 	qui save `events'
 	* merge events to original dataset 
 	restore 
-	qui merge 1:1 patient using `events', keep(match master) nogen
-	if "`y'" != "" qui replace `varlist'_y = 0 if `varlist'_y ==. 
+	if "`nogenerate'" =="" { 
+		qui merge 1:1 patient using `events', keep(match master) nogen
+		if "`y'" != "" {
+			qui replace `varlist'_y = 0 if `varlist'_y ==. 
+		}
+	}
 end

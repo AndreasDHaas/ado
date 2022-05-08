@@ -122,6 +122,7 @@ program define flab
 		qui merge 1:1 patient using `events', keep(match master) nogen
 		if "`y'" != "" {
 			qui replace `varlist'_y = 0 if `varlist'_y ==. 
+			tab `varlist'_y, mi
 		}
 	}
 end

@@ -1,6 +1,12 @@
 capture program drop fdiag
 program define fdiag
 * version 2.1  AH 6 May 2022 
+	* assert master table is in wide format 
+	qui gunique patient
+	if r(maxJ) > 1 {
+		display in red "Currently loaded dataset is not in wide format. The variable patient has to uniquly identify observations."
+		exit 198
+	}	
 	* syntax checking enforces that variables specified in IF are included in master table. 
 	* workaround: original dataset is preserved. Variables specified in IF and not included in master table are generate before systax checking and original dataset restored thereafter
 	preserve 

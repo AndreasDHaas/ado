@@ -4,16 +4,11 @@ program define fhos
 	* assert master table is in wide format 
 	qui gunique patient
 	if r(maxJ) > 1 {
-		display in red "Currently loaded dataset is not in wide format. The variable patient has to uniquly identify observations."
+		display in red "Currently loaded dataset is not in wide format. The variable patient must uniquly identify observations."
 		exit 198
 	}	
 	* syntax checking enforces that variables specified in IF are included in master table. 
 	* workaround: original dataset is preserved. Variables specified in IF and not included in master table are generate before systax checking and original dataset restored thereafter
-		use "$clean/HOS", clear
-		*ds, has(type string)
-		*di "`r(varlist)'"
-		*ds, not(type string)
-		*di "`r(varlist)'"		
 	preserve 
 	foreach var in patient code_type hosp_code code_description {
 		qui capture gen `var' = ""

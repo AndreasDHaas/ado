@@ -39,6 +39,9 @@
 {synopt :{opt listpat:ient(patient)}}lists diagnoses of specified patient id before and after applying age and date restrictions {p_end}
 {synopt :{opt desc:ribe}}specifies the using dataset and coding of its variables are described {p_end}
 {synopt :{opt nogen:erate}}specifies that newvar_* not be created {p_end}
+{synopt :{opt ifnot(string)}}specifies icd10 codes that disqualify codes specified in the if condition if the co-occur within a window - 30 days to + 30 days)  {p_end}
+{synopt :{opt ifnotbefore(#)}}specifies the number of days of lower limit of time window used in notif  {p_end}
+{synopt :{opt ifnotafter(#)}}specifies the number of days of upper limit ot time window used in notif {p_end}
 
 {marker description}{...}
 {title:Description}
@@ -59,6 +62,19 @@
 {phang}{cmd: fdiag} bipolar {cmd: using} "$clean/ICD10_F", nogen describe {p_end} 
  * Generate variables for first hospital admission for a bipolar disorder 
 {phang}{cmd: fdiag} bipolar {cmd: using} "$clean/ICD10_F" if regexm(icd10_code, "F31") & source ==3 & inlist(code_role, "REASON FOR ADMISSION"), n y list(3) {p_end}
+
+*  Generate variable for bleeding stroke excluding conditions mimicking stroke
+{phang}{cmd: preserve }  {p_end}
+{phang}{cmd: clear } {p_end}
+{phang}{cmd: append } using "$clean/ICD10_AB" {p_end}
+{phang}{cmd: append } using "$clean/ICD10_G" {p_end}
+{phang}{cmd: append } using "$clean/ICD10_I" {p_end}
+{phang}{cmd: save } "$clean/ICD10_stroke", replace {p_end}
+{phang}{cmd: restore } {p_end}
+
+{phang}{cmd: fdiag} fdiag } bleedingstroke using "$clean/ICD10_stroke" if regexm(icd10_code, "I6[0-1]"), /// {p_end}
+			notif(A06.6 A17 A52.[1-3] A54.8 A81.2 B00.3 B01.0 B02.1 B37.5 B38.4 B43.1 B45.1 B45.9 B58.2 B58.9 B69.0 B90.0 G0[0-7] G09) ///
+			notifbefore(30) notifafter(30) minage(18) $studyperiod y listpat(B000742345) 
 
 {marker Notes}{...}
 {title:Notes}

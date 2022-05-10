@@ -74,7 +74,7 @@ program define fdiag
 			qui bysort patient (notif_code icd10_date): replace notif_code = notif_code + notif_code[_n-1] if _n >1 
 			qui sum notif_code 
 			di in red "number of iterations: `r(max)'"
-			forvalues j =`r(min)'/2 {
+			forvalues j =`r(min)'/`r(max)' {
 				di in red "iteration number: `j'"
 				qui gen notif_code`j'_d = icd10_date if notif_code == `j'
 				qui bysort patient (notif_code`j'_d): replace notif_code`j'_d = notif_code`j'_d[1] if notif_code`j'_d ==.

@@ -1,6 +1,6 @@
 capture program drop fdiag
 program define fdiag
-* version 2.1  AH 6 May 2022 
+* version 2.2  AH 10 May 2022 
 	* assert master table is in wide format 
 	qui gunique patient
 	if r(maxJ) > 1 {
@@ -17,7 +17,7 @@ program define fdiag
 		qui capture gen `var' = .
 	}	
 	* syntax 
-	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate ] 
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate NOTIF(string) NOTIFBEFORE(integer 30) NOTIFAFTER(integer 30) ] 
 	restore 
 	* confirm newvarname does not exist 
 	if "`nogenerate'" =="" { 
@@ -40,11 +40,14 @@ program define fdiag
 	if "`listpatient'" !="" {
 		di "" 
 		di "" 
-		di in red "listpatient: all"
+		di in red "listpatient: all obs in using table"
 		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* select relevant diagnoses 
 	marksample touse, novarlist
+	foreach code in `notif' {
+		qui replace `touse' = 1 if regexm(icd10_code, "`code'")
+	}
 	qui drop if !`touse'
 	* list
 	if "`list'" !="0" {
@@ -54,34 +57,73 @@ program define fdiag
 	}
 	* listpatient
 	if "`listpatient'" !="" {
-		di in red "listpatient: meeting if conditions"
+		di in red "listpatient: obs meeting if and notif conditions"
 		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
+	* notif 
+		* flag codes meeting notif condition 
+		if "`notif'" !="" {
+			qui gen notif_code = .
+			foreach code in `notif' {
+				qui replace notif_code = 1 if regexm(icd10_code, "`code'") 
+			}
+		}
+		* flag codes that are not used because they are in time window around codes meeting notif condition
+		if "`notif'" !="" {
+			qui gen notif = 0
+			qui bysort patient (notif_code icd10_date): replace notif_code = notif_code + notif_code[_n-1] if _n >1 
+			qui sum notif_code 
+			di in red "number of iterations: `r(max)'"
+			forvalues j =`r(min)'/2 {
+				di in red "iteration number: `j'"
+				qui gen notif_code`j'_d = icd10_date if notif_code == `j'
+				qui bysort patient (notif_code`j'_d): replace notif_code`j'_d = notif_code`j'_d[1] if notif_code`j'_d ==.
+				format notif_code`j'_d % td
+				qui replace notif = 1 if (icd10_date >= notif_code`j'_d - `notifbefore') & (icd10_date <= notif_code`j'_d + `notifafter') 
+				drop notif_code`j'_d
+			}
+			sort patient icd10_date
+			if "`listpatient'" !="" {
+				di in red "listpatient: obs meeting if and notif conditions, obs not used because they are in time window around codes meeting notif condition flagged (notif==1)"
+				list patient icd10_date discharge_date icd10_code source icd10_type code_role age notif if patient =="`listpatient'", sepby(patient)
+			}
+		}
+		* drop notif records records and notif codes 
+		if "`notif'" !="" {
+			qui drop if notif ==1 
+			drop notif 
+			marksample touse, novarlist
+			drop if !`touse'
+			if "`listpatient'" !="" {
+				di in red "listpatient: obs meeting if conditions, notif==1 dropped"
+				list patient icd10_date discharge_date icd10_code source icd10_type code_role age notif if patient =="`listpatient'", sepby(patient)
+			}
+		}	
 	* select age 
 	if "`minage'" !="" qui drop if age < `minage' 
 	* listpatient
 	if "`listpatient'" !="" {
-		di in red "listpatient: >= minage"
+		di in red "listpatient: obs < minage dropped"
 		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	if "`maxage'" !="" qui drop if age > `maxage' & age !=. 
 	* listpatient
 	if "`listpatient'" !="" {
-		di in red "listpatient: <= maxage"
+		di in red "listpatient: obs > maxage dropped"
 		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* mindate 
 	if "`mindate'" != "" qui drop if icd10_date < `mindate'
 	* listpatient
 	if "`listpatient'" !="" {
-		di in red "listpatient: >= mindate"
+		di in red "listpatient: obs < mindate dropped"
 		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* maxdate
 	if "`maxdate'" != "" qui drop if icd10_date > `maxdate' & icd10_date !=. 
 	* listpatient
 	if "`listpatient'" !="" {
-		di in red "listpatient: <= maxdate"
+		di in red "listpatient: obs > maxdate dropped"
 		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
 	* number of diagnoses 

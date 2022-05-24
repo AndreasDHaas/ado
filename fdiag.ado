@@ -17,7 +17,7 @@ program define fdiag
 		qui capture gen `var' = .
 	}	
 	* syntax 
-	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate NOTIF(string) NOTIFBEFORE(integer 30) NOTIFAFTER(integer 30) ] 
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate NOTIF(string) NOTIFBEFORE(integer 30) NOTIFAFTER(integer 30) censor(varlist min==1 max==1)] 
 	restore 
 	* confirm newvarname does not exist 
 	if "`nogenerate'" =="" { 
@@ -164,7 +164,15 @@ program define fdiag
 		qui merge 1:1 patient using `events', keep(match master) nogen
 		if "`y'" != "" {
 			qui replace `varlist'_y = 0 if `varlist'_y ==. 
+			di "--- before censoring ---"
 			tab `varlist'_y, mi
 		}
+	}
+	if "`censor'" !="" {
+		if "`y'" != "" {
+			qui replace `varlist'_y = 0 if `varlist'_d !=. & `varlist'_d > `censor'
+			tab `varlist'_y, mi
+		}
+		qui replace `varlist'_d = . if `varlist'_d !=. & `varlist'_d > `censor'
 	}
 end

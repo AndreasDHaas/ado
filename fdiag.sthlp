@@ -39,6 +39,7 @@
 {synopt :{opt listpat:ient(patient)}}lists diagnoses of specified patient id before and after applying age and date restrictions {p_end}
 {synopt :{opt desc:ribe}}specifies the using dataset and coding of its variables are described {p_end}
 {synopt :{opt nogen:erate}}specifies that newvar_* not be created {p_end}
+{synopt :{opt censor(varname)}}specifies that diagnoses after varname are censored {p_end}
 {synopt :{opt ifnot(string)}}specifies icd10 codes that disqualify codes specified in the if condition if the co-occur within a window - 30 days to + 30 days)  {p_end}
 {synopt :{opt ifnotbefore(#)}}specifies the number of days of lower limit of time window used in notif  {p_end}
 {synopt :{opt ifnotafter(#)}}specifies the number of days of upper limit ot time window used in notif {p_end}

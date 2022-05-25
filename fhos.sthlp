@@ -39,6 +39,7 @@
 {synopt :{opt listpat:ient(patient)}}lists codes of specified patient id before and after applying age and date restrictions {p_end}
 {synopt :{opt desc:ribe}}specifies the using dataset and coding of its variables are described {p_end}
 {synopt :{opt nogen:erate}}specifies that newvar_* not be created {p_end}
+{synopt :{opt censor(varname)}}specifies that codes after varname are censored {p_end}
 
 {marker description}{...}
 {title:Description}

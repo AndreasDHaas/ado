@@ -167,11 +167,11 @@ program define percentages
 			* append 
 			if "`append'" != "" {
 				tempfile file 
-				qui save `file'
-				qui use `append', clear 
-				qui append using `file'  
+				qui save "`file'"
+				qui use "`append'", clear 
+				qui append using "`file'"  
 			}
-			if "`append'" != "" save `append', replace 
+			if "`append'" != "" save "`append'", replace 
 			* list 
 			if "`clean'" == "" list, sepby(header)
 			if "`clean'" != "" list label `varlist', sepby(header) noheader

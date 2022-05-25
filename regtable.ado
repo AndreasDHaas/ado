@@ -76,15 +76,15 @@ program define regtable
 			* subgroup 
 			if "`subgroup'" != "9" gen subgroup = `subgroup' 			
 			* save 
-			if "`save'" != "" save `save', replace 
+			if "`save'" != "" save "`save'", replace 
 			* append 
 			if "`append'" != "" {
 				tempfile file 
-				qui save `file'
+				qui save "`file'"
 				clear
-				capture qui use `append', clear 
-				qui append using `file'  
-				save `save', replace 
+				capture qui use "`append'", clear 
+				qui append using "`file'"  
+				save "`save'", replace 
 			}
 			* list 
 			descr outcome rID

@@ -28,7 +28,7 @@ program define fhos
 		}
 	}
 	qui preserve
-	use `using', clear
+	use "`using'", clear
 	*describe
 	if "`describe'" !="" {
 		describe
@@ -114,11 +114,11 @@ program define fhos
 	order patient `varlist'_d 
 	* save events
 	qui tempfile events
-	qui save `events'
+	qui save "`events'"
 	* merge events to original dataset 
 	restore 
 	if "`nogenerate'" =="" { 
-		qui merge 1:1 patient using `events', keep(match master) nogen
+		qui merge 1:1 patient using "`events'", keep(match master) nogen
 		if "`y'" != "" {
 			qui replace `varlist'_y = 0 if `varlist'_y ==. 
 			di "--- before censoring ---"

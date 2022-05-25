@@ -28,7 +28,7 @@ program define fdrug
 		}
 	}
 	qui preserve
-	use "`using'", clear
+	use `using', clear
 	*describe
 	if "`describe'" !="" {
 		describe

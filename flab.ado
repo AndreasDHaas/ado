@@ -28,7 +28,7 @@ program define flab
 		}
 	}
 	qui preserve
-	use "`using'", clear
+	use `using', clear
 	capture gen qualifier = "="
 	*describe
 	if "`describe'" !="" {

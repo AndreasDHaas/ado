@@ -129,6 +129,7 @@ program define flab
 	if "`censor'" !="" {
 		if "`y'" != "" {
 			qui replace `varlist'_y = 0 if `varlist'_d !=. & `varlist'_d > `censor'
+			di "--- after censoring ---"
 			tab `varlist'_y, mi
 		}
 		qui replace `varlist'_d = . if `varlist'_d !=. & `varlist'_d > `censor'

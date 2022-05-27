@@ -31,14 +31,14 @@
 {title:Description}
 
 {pstd}
-{opt splittvc} splits person time at specified event dates and generates a time-varying covariate. The command requires five variables: 
-- id: unique identifier (numeric or string) 
-- start: date of follow-up time of record (numeric)
-- end: end of follow-up time of record (numeric)
-- event: binary indicator for event (numeric)
-- eventtime: event time (numeric)
-Multiple rows per id are permitted. The dataset should not include observations without person-time at risk (_st==0). 
+{opt splittvc} splits person-time at specified event dates and generates a time-varying covariate. Multiple rows per id are permitted. The command requires five variables: {p_end}
+{phang}- id: unique identifier (numeric or string) {p_end}
+{phang}- start: date of follow-up time of record (numeric){p_end}
+{phang}- end: end of follow-up time of record (numeric){p_end}
+{phang}- event: binary indicator for event (numeric){p_end}
+{phang}- eventtime: event time (numeric){p_end}
 
+{phang}The dataset should not include observations without person-time at risk (_st==0).  {p_end}
 
 {marker examples}{...}
 {title:Examples}
@@ -52,7 +52,7 @@ Dataset before splitting
    |    5631   01 Jan 2011   01 Jul 2020   30 Nov 15     1     |
    +-----------------------------------------------------------+
 
-{phang}{cmd:. splittvc patient start end eventtime event, listid(131, 5631) nolab tvcmissing }{p_end}
+{phang}{cmd:. splittvc} patient start end eventtime event, listid(131, 5631) nolab {p_end}
 
 Dataset after splitting
    +---------------------------------------------------------------------+
@@ -65,7 +65,7 @@ Dataset after splitting
    +---------------------------------------------------------------------+
 
 Use quotation marks in the option listid() if id is a string variable.  
-{phang}{cmd:. splittvc patient start end eventtime event, listid("131", "5631")}{p_end}
+{phang}{cmd:. splittvc} patient start end eventtime event, listid("131", "5631"){p_end}
 		 
 {marker author}{...}
 {title:Author}

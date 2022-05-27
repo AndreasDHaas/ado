@@ -36,12 +36,15 @@ formats{p_end}
 {synopt :{opt seed:}}seed, seed can not be set to -88888{p_end}
 {synopt :{opt nolab:el}}no value lables{p_end}
 {synopt :{opt string(#):}}truncate string variables to # display columns (default 30){p_end}
+{synopt :{opt global(macroname):}}saves global macro with identifiers of selected observations {p_end}
 
 {marker examples}{...}
 {title:Examples}
 
 {phang}{cmd:. sysuse} bplong.dta{p_end}
 {phang}{cmd:. listif} patient sex agegrp when bp if bp==153, id(patient) sort(patient) sepby(patient when) n(5){p_end}
-
+{phang}{cmd:. listif} patient sex agegrp when bp if bp==153, id(patient) sort(patient) sepby(patient when) n(5) global(bp153){p_end}
+{phang}{cmd:. display} `"$bp153"' {p_end}
+{phang}{cmd:. list} patient sex agegrp when bp if inlist(patient, $bp153), sepby(patient){p_end}
 
 

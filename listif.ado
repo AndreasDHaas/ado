@@ -24,26 +24,32 @@
 			qui bysort `id' (`random'): keep if _n ==1
 			qui sample `n', count
 			qui levelsof `id', clean
-			sort `sort'
-			* List 
+			* Global 
 			capture confirm numeric variable `id' 
 			if !_rc {
-				foreach j in `r(levels)' {
-						list `varlist' if `id' ==`j', sepby(`sepby') `nolabel' string(`string')
-				}
 				if "`global'" != "" {
 					qui levelsof `id', sep(,) clean
 					global `global' "`r(levels)'"
 				}
 			}
 			else {
-				foreach j in `r(levels)' {
-						list `varlist' if `id' =="`j'", sepby(`sepby') `nolabel' string(`string')
-				}	
 				if "`global'" != "" {
 					qui levelsof `id', sep(,)
 					global `global' "`r(levels)'"
 				}
 			}			
+			sort `sort'
 			restore
+			* List 
+			capture confirm numeric variable `id' 
+			if !_rc {
+				foreach j in `r(levels)' {
+						list `varlist' if `id' ==`j', sepby(`sepby') `nolabel' string(`string')
+				}
+			}
+			else {
+				foreach j in `r(levels)' {
+						list `varlist' if `id' =="`j'", sepby(`sepby') `nolabel' string(`string')
+				}	
+			}			
 		end

@@ -1,94 +1,199 @@
-capture program drop regtable
+
+capture program drop regtable	
 program define regtable
-* version 0.1  AH 25 Apr 2021 
-	syntax anything [, append(string) save(string) BRackets MIDpoint PFormat(string) ESTFormat(string) HEADing(string) INDent(integer 2) LABELFormat adjusted(integer 9) subgroup(integer 9) outcome(string) addrow(integer 0) ///
-	LABEL1(string) LABEL2(string) LABEL3(string) LABEL4(string) LABEL5(string) LABEL6(string) LABEL7(string) LABEL8(string) LABEL9(string) LABEL10(string) LABEL11(string) LABEL12(string) LABEL13(string)  LABEL14(string) LABEL15(string) ///
-	LABEL16(string) LABEL17(string) LABEL18(string) LABEL19(string) LABEL20(string) ]
-		if "`save'" != "" & "`append'" != "" {
-			di in red "specify either save or append"
-			error 197
+* version 1.0  AH 28 May 2022 
+	syntax varlist(min=1) [, SAVE(string) APPEND(string) EFORM DROP(string) KEEP(string) FORMAT(string) HEADING BRACKETS INDENT(int 2) LABELFormat DROPCOEFficient(string) name(string) number(int -999) VARSUFfix(string) CLEAN MIDpoint BASELEVels CISEParator(string) MERGE(string) MERGEID(string) COLLAB(string) ESTLAB(string) SORT(string) BASELABel(string)] 
+	* Indentation  
+		forvalues iteration = 1/`indent' {
+			local blanks = "`blanks'" + " "
 		}
-		token `anything'
-		if "`2'" == "" {
-			di in red "too few values specified. The syntax is regtable matrixName outcomeID"
-			error 134
+		* Save matrix 
+		tempname M
+		matrix `M' = r(table)'
+		* Extract labels 
+		local c = 1 
+		foreach j in `varlist' {
+			qui levelsof `j'
+			foreach n in `r(levels)' {
+				local levels_`j' = "`r(levels)'"
+				local labname : value label `j'
+				if "`labname'" !="" {
+					local `j'_`n' : label `labname' `n'
+				}
+				else if "`labname'" =="" {
+					local `j'_`n' = "`n'"
+				}
+				// di in red "``j'_`n''" 
+				local varlab_`j' : variable label `j'
+			}
 		}
-		if "`3'" != "" {
-			di in red "too many values specified. The syntax is regtable matrixName outcomeID"
-			error 197
-		}
-		* matrix to data 
-		preserve 
-		qui clear
-		qui svmat2 `1', names(col) rnames(coef)
-			* b & ci
-			foreach var in b ll ul {
-				format `var' %3.2fc
-				if "`estformat'" != "" format `var' `estformat'
-				qui tostring `var', gen(`var'f) force usedi
+		* Preserve 
+		preserve
+			* save estimated to dataset 
+			qui clear
+			qui svmat2 `M', names(col ) rnames(var)
+			* eform
+			if "`eform'" != "" { // 
+				foreach var in b ll ul {
+					qui replace `var'=exp(`var')
+				}
 			}
-			* row ID 
-			qui gen rID =_n	
-			* headding
-			if "`heading'" != "" {	
-				qui set obs `=_N+1'
-				qui replace rID = 0 if rID ==.
-				sort rID
+			* Format estimates
+			if "`format'" == "" { // 
+				format %4.2f b ll ul
 			}
-			* label 
-			tempvar blanks 
-			qui gen `blanks' = ""
-			forvalues j = 1/`indent' {
-				qui replace `blanks' = `blanks' + " "
+			if "`format'" != "" { // 
+				format `format' b ll ul
 			}
-			gen label = "", before(b)
-			forvalues i = 1/20 {
-				qui replace label = `blanks' + "`label`i''" if rID==`i++'
-			}
-			if "`heading'" != "" qui replace label = "`heading'" if rID ==0
-			if "`labelformat'" == "" qui format %-40s label
-			qui format `labelformat' label
-			* brackets 
+			* Brackets 
 			if "`brackets'" != "" local l = "["	
 			if "`brackets'" != "" local r = "]"	
 			if "`brackets'" == "" local l = "("	
-			if "`brackets'" == "" local r = ")"		
-			* estimate
-			qui gen est = bf + " `l'" + llf + " to " + ulf + "`r'" if b !=., before(b)
-			* p-value 
-			if "`labelformat'" == "" format pvalue %5.4fc
-			qui format pvalue `pformat'
-			qui tostring pvalue, gen(p) force usedi
-			qui replace p = "<0.0001" if pvalue < 0.0001
-			qui replace p = "" if p == "."
-			* midpoint
+			if "`brackets'" == "" local r = ")"			
+			* CISEParator
+			if "`ciseparator'" == "" local S = "-"
+			else local S = "`ciseparator'" 
+			* Varname
+			qui gen varname = regexr(var, "^[0-9]+b.", "")
+ 			qui replace varname = regexr(var, "^[0-9]+.", "") if !regexm(var, "^[0-9]+b.")
+			* Level 
+			qui gen level = regexs(0) if regexm(var, "^[0-9]+")	
+			* ID 
+			qui gen id = _n
+			* Baselevel
+			if "`baselevels'" != "" {
+				qui bysort varname (id): gen n = _n  
+				qui expand 2 if n ==1, gen(dup)
+				qui replace dup = dup*-1
+				sort id dup
+				qui ds varname id dup n, not 
+				foreach v of var `r(varlist)' {
+					qui capture replace `v' = "" if dup ==-1
+					qui capture replace `v' = . if dup ==-1
+				}
+			}
+			* Label 
+			qui levelsof varname
+			qui gen label = ""
+			qui foreach j in `r(levels)' {
+				qui levelsof level 
+				foreach n in `r(levels)' {
+					qui replace label =  "`blanks'" + "``j'_`n''" if varname == "`j'" & level =="`n'"
+				}
+			}
+			* labelformat 
+			if "`labelformat'" == "" format %-10s label 
+			else if "`labelformat'" != "" format `labelformat' label 
+			format %-10s var 
+			* Combine 
+			if "`format'" != "" local f = "`format'"
+			else local f = "%3.2f"
+			qui gen est = string(b, "`f'") + " `l'" + string(ll, "`f'") + "`S'" + string(ul, "`f'") + "`r'" 
+			* Baselab 
+				if "`baselabel'" == "" { 
+					qui replace est = "1.00" if regexm(var, "^[0-9]+b.")
+				}
+				else {
+					qui replace est = "`baselabel'" if regexm(var, "^[0-9]+b.")
+				} 
+			* Headline for categorical variables
+			capture drop dup 
+			capture drop n
+			if "`heading'" != "" {
+				qui bysort varname (id): gen n = _n  
+				qui expand 2 if n ==1, gen(dup)
+				qui replace dup = dup*-1
+				sort id dup
+				qui ds varname id dup n, not 
+				foreach v of var `r(varlist)' {
+					qui capture replace `v' = "" if dup ==-1
+					qui capture replace `v' = . if dup ==-1
+				}
+				qui replace id = id-0.1 if dup ==-1	
+				qui replace var = "h." + varname if dup ==-1	
+				foreach j in `varlist' {
+					qui replace label = "`varlab_`j''" if dup == -1 & varname == "`j'"
+				}
+				drop dup n
+			}
+			else qui gen heading = .
+			* Drop coefficients
+			foreach d in `dropcoefficient' {
+				qui drop if regexm(var, "`d'")
+			}
+			* Midpoint
 			if "`midpoint'" != "" qui replace est = subinstr(est, ".", "·", .) 
-			if "`midpoint'" != "" qui replace p = subinstr(p, ".", "·", .) 
-			* add blank rows 
-			qui set obs `=_N+`addrow''
-			qui replace rID = _n * -1 if rID ==.
-			sort rID
-			* adjusted 
-			qui gen adjusted = `adjusted'
-			* outcome
-			qui gen outcome = "`2'"
-			if regexm("`2'", "^[0-9]+$") destring outcome, replace force
-			* subgroup 
-			if "`subgroup'" != "9" gen subgroup = `subgroup' 			
+			* Estimate label 
+			if "`estlab'" != "" {
+				qui set obs `=_N+1'
+				qui replace id = -1 if _N==_n
+				qui replace est = "`estlab'" if _N==_n
+				qui replace var = "estlab" if _N==_n
+				sort id
+			}	
+			* Column label 
+			if "`collab'" != "" {
+				qui set obs `=_N+1'
+				qui replace id = -2 if _N==_n
+				qui replace est = "`collab'" if _N==_n
+				qui replace var = "collab" if _N==_n
+				sort id
+			}
+			* Name & number
+			if "`name'" != "" qui gen name = "`name'"
+			if "`number'" != "-999" qui gen number = `number'
+			* varsuffix 
+			qui ds label var, not 
+			local varlist  `r(varlist)'
+			if "`varsuffix'" != "" {
+				foreach j of var `varlist' {
+					rename `j' `j'`varsuffix'
+				}
+			}
+			* Drop and keep variables 
+			if "`drop'" != "" { // 
+				drop `drop'
+			}
+			if "`keep'" != "" { // 
+				keep `keep'
+			}
+			* Order 
+			order var label est 
 			* save 
-			if "`save'" != "" save "`save'", replace 
+			if "`save'" != "" {
+				if "`sort'" != "" sort `sort' // sort option 
+				save `save', replace 
+			}
 			* append 
 			if "`append'" != "" {
 				tempfile file 
-				qui save "`file'"
+				qui save `file'
 				clear
-				capture qui use "`append'", clear 
-				qui append using "`file'"  
-				save "`save'", replace 
+				capture qui use `append', clear 
+				qui append using `file'  
+				if "`sort'" != "" sort `sort' // sort option 
+				save `save', replace 
+			}
+			* merge
+			if "`merge'" != "" {
+				tempvar s
+				gen `s' =_n
+				tempfile file 
+				qui save `file'
+				clear
+				capture qui use `merge', clear 
+				local key = "var"
+				if "`mergeid'" != "" local key = "`mergeid'"
+				merge 1:1 `key' using `file', nogen update
+				sort `s'
+				drop `s'
+				if "`sort'" != "" sort `sort' // sort option 
+				save `save', replace 
 			}
 			* list 
-			descr outcome rID
-			if "`subgroup'" != "9" list label est p rID outcome adjusted subgroup, separator(`=_N')
-			else list label est p rID outcome adjusted, separator(`=_N')
-	restore 
-end 
+			if "`clean'" == "" list, sep(`=_N')
+			else list label est*, sep(`=_N') noheader
+		* Restore 
+		restore
+	end 
+

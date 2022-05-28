@@ -14,7 +14,7 @@
 {title:Syntax}
 
 {p 8 18 2}
-{cmdab:postsave [varlist] } 
+{cmdab:postsave} varlist } 
 [{cmd:,}
 {it:options}]
 
@@ -31,7 +31,7 @@
 {synopt:{opt eform}} Exponentiates coefficients {p_end}
 {synopt:{opt drop(varlist)}} drops variables specified in varlist {p_end}
 {synopt:{opt keep(varlist)}} keeps variables specified in varlist {p_end}
-{synopt:{opt baselevels(filepath)}}displays baselevels {p_end}
+{synopt:{opt baselevels}}displays baselevels {p_end}
 {synopt:{opt baselabel(string)}}labels estimate with string (default ref.) {p_end}
 {synopt:{opt heading}}adds row with variable label for categorial variables in varlist {p_end}
 {synopt:{opt dropcoef:ficient(string)}} loops over word in string and drops coefficients matching regular expression {p_end}

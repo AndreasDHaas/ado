@@ -17,7 +17,7 @@ program define fdiag
 		qui capture gen `var' = .
 	}	
 	* syntax 
-	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate NOTIF(string) NOTIFBEFORE(integer 30) NOTIFAFTER(integer 30) censor(varlist min==1 max==1)] 
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate NOTIF(string) NOTIFBEFORE(integer 30) NOTIFAFTER(integer 30) censor(varlist min==1 max==1) REPEATED(numlist >=0 integer min=1 max=1) ]
 	restore 
 	* confirm newvarname does not exist 
 	if "`nogenerate'" =="" { 
@@ -143,8 +143,19 @@ program define fdiag
 				lab val `varlist'_y `varlist'_y
 			}
 	}
-	* select first diag event 
-	qui bysort patient (icd10_date): keep if _n ==1
+	* repeated 
+	if "`repeated'" == "" {
+		* select first diag event 
+		qui bysort patient (icd10_date): keep if _n ==1
+	}
+	else {
+		tempname fdate 
+		tempname j 
+		bysort patient (icd10_date): gen `fdate' = icd10_date[1]
+		gen `j' = 1 + floor(((icd10_date - `fdate') / `repeated')) 
+		qui bysort patient `j' (icd10_date): keep if _n ==1
+		drop `fdate'
+	}
 	* event date 
 	qui rename icd10_date `varlist'_d
 	if "`listpatient'" !="" {
@@ -152,9 +163,14 @@ program define fdiag
 		list patient `varlist'_* if patient =="`listpatient'", sepby(patient) 
 	}
 	* clean
-	qui keep patient `varlist'_*
+	qui keep patient `varlist'_* `j'
 	* order and apply n and y options
 	order patient `varlist'_d 
+	* number of repeated events 
+	qui sum `j'
+	local max = `r(max)'
+	* reshape wide 
+	if "`repeated'" != "" qui reshape wide `varlist'_d, j(`j') i(patient) 
 	* save events
 	qui tempfile events
 	qui save "`events'"
@@ -170,10 +186,16 @@ program define fdiag
 	}
 	if "`censor'" !="" {
 		if "`y'" != "" {
-			qui replace `varlist'_y = 0 if `varlist'_d !=. & `varlist'_d > `censor'
+			if "`repeated'" == "" qui replace `varlist'_y = 0 if `varlist'_d !=. & `varlist'_d > `censor'
+			else qui replace `varlist'_y = 0 if `varlist'_d1 !=. & `varlist'_d1 > `censor'
 			di "--- after censoring ---"
 			tab `varlist'_y, mi
 		}
-		qui replace `varlist'_d = . if `varlist'_d !=. & `varlist'_d > `censor'
+		if "`repeated'" == "" qui replace `varlist'_d = . if `varlist'_d !=. & `varlist'_d > `censor'
+		else {
+			forvalues z = 1/`max' {
+				qui replace `varlist'_d`z' = . if `varlist'_d`z' !=. & `varlist'_d`z' > `censor'
+			}
+		}
 	}
 end

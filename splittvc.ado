@@ -11,7 +11,7 @@ program define splittvc
 		qui local event `5'
 		* list 
 		di " --- Cases specified in listid() before splitting ---"
-	    list `id' `start' `end' `event_d' `event' if inlist(`id', `listid'), sepby(`id') `nolabel'
+	    capture list `id' `start' `end' `event_d' `event' if inlist(`id', `listid'), sepby(`id') `nolabel'
 		* number of events before end of follow-up
 		tempvar end_d 
 		qui bysort `id' (`start'): egen `end_d' = max(`end')
@@ -79,7 +79,7 @@ program define splittvc
 		local ne_tvc = `r(unique)'
 		* List 
 		di " --- Cases specified in listid() after splitting ---"
-		list  `id' `start' `end' `event_d' `event' `event'_tvc  if inlist(`id', `listid'), sepby(`id') `nolabel'
+		capture list  `id' `start' `end' `event_d' `event' `event'_tvc  if inlist(`id', `listid'), sepby(`id') `nolabel'
 		di " --- Follow-up time after splitting ---"
 		di %16.0fc `fup1'
 		di " --- Number of events recorded in `event'_tvc (excluding events occurring on end date) --- "
@@ -97,7 +97,7 @@ program define splittvc
 			* List events occurring in event but not in event_tvc 
 			tempvar maxTvc 
 			qui bysort `id' (`start'): egen `maxTvc' =max(`event'_tvc)
-			listif  `id' `start' `end' `event_d' `event' `event'_tvc if `event' != `maxTvc', id(`id') sort(`id' `start') 
+			capture listif  `id' `start' `end' `event_d' `event' `event'_tvc if `event' != `maxTvc', id(`id') sort(`id' `start') 
 		}
    end 
 

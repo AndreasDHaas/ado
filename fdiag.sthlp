@@ -43,7 +43,6 @@
 {synopt :{opt ifnot(string)}}specifies icd10 codes that disqualify codes specified in the if condition if the co-occur within a window - 30 days to + 30 days)  {p_end}
 {synopt :{opt ifnotbefore(#)}}specifies the number of days of lower limit of time window used in notif  {p_end}
 {synopt :{opt ifnotafter(#)}}specifies the number of days of upper limit ot time window used in notif {p_end}
-{synopt :{opt repeated(#)}}creates variables for repeated diagnosed occurring # days after a previous diagnoses (newvar_dj-1). newvar_y refers to first diagnoses{p_end}
 
 {marker description}{...}
 {title:Description}

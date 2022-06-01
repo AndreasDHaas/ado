@@ -16,9 +16,13 @@ program define splittvc
 		tempvar end_d 
 		qui bysort `id' (`start'): egen `end_d' = max(`end')
 		qui gunique `id' if `event' ==1 
-		local ne_total = `r(unique)'
+		capture local ne_total = `r(unique)'
+		qui count if `event' ==1  
+		if `r(N)' == 0 local ne_total = 0 
 		qui gunique `id' if `event' ==1 & `event_d' != `end_d'
-		local ne = `r(unique)'
+		capture local ne = `r(unique)'
+		qui count if `event' ==1 & `event_d' != `end_d' 
+		if `r(N)' == 0 local ne =0 
 		* check events
 		qui assert inlist(`event', 1, 0)
 		* reference date 
@@ -76,7 +80,9 @@ program define splittvc
 		local fup1 = e(b)[1,1]
 		* Number of event in tvc
 		qui gunique `id' if `event'_tvc ==1
-		local ne_tvc = `r(unique)'
+		capture local ne_tvc = `r(unique)'
+		qui count if `event'_tvc ==1 
+		if `r(N)' == 0 local ne_tvc =0 
 		* List 
 		di " --- Cases specified in listid() after splitting ---"
 		capture list  `id' `start' `end' `event_d' `event' `event'_tvc  if inlist(`id', `listid'), sepby(`id') `nolabel'

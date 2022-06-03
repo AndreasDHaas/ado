@@ -38,6 +38,11 @@ program define sumstats
 			foreach c in `categories' {
 				local lab`i++' : label `lbl' `c'
 			}
+			* indent
+			local blanks = ""
+			forvalues j = 1/`indent' {
+				local blanks = "`blanks'" + " "
+			}
 			* column levels (levels of stratifier variable)
 			qui levelsof `2', missing
 			local c `r(levels)'
@@ -80,7 +85,7 @@ program define sumstats
 				* label 
 				qui drop `2'
 				qui gen level =88
-				qui gen label = "  Median (IRQ)"
+				qui gen label = "`blanks'" + "Median (IRQ)"
 			}
 			if "`extreme'" != "" {
 				* calculate min & max  
@@ -110,7 +115,7 @@ program define sumstats
 				* label 
 				qui drop `2'
 				qui gen level =77
-				qui gen label = "  Min (Max)"
+				qui gen label = "`blanks'" + "Min (Max)"
 			}
 			if "`extreme'" == "" & "`median'" == "" {
 				* calculate mean SD  
@@ -140,7 +145,7 @@ program define sumstats
 				* label
 				qui drop `2'
 				qui gen level =99
-				qui gen label = "  Mean (SD)"
+				qui gen label = "`blanks'" + "Mean (SD)"
 			}				
 			* reshape 
 			qui reshape wide c e, j(y) i(level)

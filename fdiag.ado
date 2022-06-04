@@ -139,7 +139,7 @@ program define fdiag
 		qui gen `varlist'_y = 1
 		* label 
 			if "`label'" != "" {
-				label define  `varlist'_y 1 "`label'" 
+				label define  `varlist'_y 1 "`label'" , replace
 				lab val `varlist'_y `varlist'_y
 			}
 	}

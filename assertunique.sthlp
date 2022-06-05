@@ -27,11 +27,13 @@
 {marker examples}{...}
 {title:Examples}
 
-{pstd}Setup{p_end}
-{phang2}{cmd:. sysuse sp500.dta}{p_end}
+{phang2}{cmd:. sysuse} bpwide.dta {p_end}
+{phang2}{cmd:. assertunique} patient{p_end}
+           		
+{phang2}{cmd:. sysuse} bplong.dta {p_end}
+{phang2}{cmd:. assertunique} patient{p_end}
 
-{pstd}Spike plot{p_end}
-{phang2}{cmd:. assertunique date}
-{phang2}{cmd:. assertunique high}
- {phang2}{cmd:. assertunique high close}            		
+{marker notes}{...}
+{title:Notes}
 
+{phang2}{cmd:assertunique} uses the user-written command {cmd:gunique}. Install gunique from ssc:{cmd: ssc install} gtools{p_end}

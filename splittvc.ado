@@ -11,7 +11,7 @@ program define splittvc
 		qui local event `5'
 		* list 
 		di " --- Cases specified in listid() before splitting ---"
-	    capture list `id' `start' `end' `event_d' `event' if inlist(`id', `listid'), sepby(`id') `nolabel'
+	    list `id' `start' `end' `event_d' `event' if inlist(`id', `listid'), sepby(`id') `nolabel'
 		* number of events before end of follow-up
 		tempvar end_d 
 		qui bysort `id' (`start'): egen `end_d' = max(`end')
@@ -85,7 +85,7 @@ program define splittvc
 		if `r(N)' == 0 local ne_tvc =0 
 		* List 
 		di " --- Cases specified in listid() after splitting ---"
-		capture list  `id' `start' `end' `event_d' `event' `event'_tvc  if inlist(`id', `listid'), sepby(`id') `nolabel'
+		list  `id' `start' `end' `event_d' `event' `event'_tvc  if inlist(`id', `listid'), sepby(`id') `nolabel'
 		di " --- Follow-up time after splitting ---"
 		di %16.0fc `fup1'
 		di " --- Number of events recorded in `event'_tvc (excluding events occurring on end date) --- "

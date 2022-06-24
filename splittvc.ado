@@ -91,7 +91,7 @@ program define splittvc
 		di " --- Number of events recorded in `event'_tvc (excluding events occurring on end date) --- "
 		di %10.0fc `ne_tvc'
 		* Checks
-		assert `fup' == `fup1'
+		assert float(`fup') == float(`fup1')
 		assert `ne' == `ne_tvc'
 		qui count if !inlist(`event'_tvc, 0, 1) 
 		if `r(N)' !=0 {

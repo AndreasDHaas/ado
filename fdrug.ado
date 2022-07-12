@@ -17,7 +17,7 @@ program define fdrug
 		qui capture gen `var' = .
 	}	
 	* syntax 
-	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate censor(varlist min==1 max==1) ] 
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate censor(varlist min==1 max==1) REFDATE(varlist min==1 max==1) REFMINUS(integer 30) REFPLUS(integer 30)] 
 	restore 
 	* confirm newvarname does not exist 
 	if "`nogenerate'" =="" { 
@@ -28,7 +28,17 @@ program define fdrug
 		}
 	}
 	qui preserve
+	* save refdate 
+	if "`refdate'" !="" {
+		tempfile ref 
+		keep patient `refdate'
+		qui save `ref'
+	}
 	use `using', clear
+	* merge ref 
+	if "`refdate'" !="" {
+		qui merge m:1 patient using `ref', keep(match master)
+	}
 	*describe
 	if "`describe'" !="" {
 		describe
@@ -81,6 +91,22 @@ program define fdrug
 		di in red "listpatient: <= maxdate"
 		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
 	}
+	* refdate
+	if "`refdate'" != "" {
+		count if `refdate' ==. & _merge ==3
+		if `r(N)' > 0 {
+			display in red "`refdate' has missing values"
+			exit 198
+		}	
+		gen lb = `refdate' - `refminus'
+		gen ub = `refdate' + `refplus'
+		qui keep if inrange(med_sd, lb, ub)  
+	}
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: not within refdate -refminus +refplus dropped"
+		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age `refdate' lb ub if patient =="`listpatient'", sepby(patient) 
+	}
 	* number of diagnoses 
 	qui bysort patient med_sd: keep if _n ==1
 	if "`listpatient'" !="" {
@@ -126,6 +152,7 @@ program define fdrug
 	if "`censor'" !="" {
 		if "`y'" != "" {
 			qui replace `varlist'_y = 0 if `varlist'_d !=. & `varlist'_d > `censor'
+			qui capture replace `varlist'_n = . if `varlist'_d !=. & `varlist'_d > `censor'
 			di "--- after censoring ---"
 			tab `varlist'_y, mi
 		}

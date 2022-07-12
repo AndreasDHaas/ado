@@ -1,6 +1,6 @@
 capture program drop fdiag
 program define fdiag
-* version 2.2  AH 10 May 2022 
+* version 2.3  AH 11 July 2022 
 	* assert master table is in wide format 
 	qui gunique patient
 	if r(maxJ) > 1 {
@@ -17,7 +17,7 @@ program define fdiag
 		qui capture gen `var' = .
 	}	
 	* syntax 
-	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate NOTIF(string) NOTIFBEFORE(integer 30) NOTIFAFTER(integer 30) censor(varlist min==1 max==1)] 
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate NOTIF(string) NOTIFBEFORE(integer 30) NOTIFAFTER(integer 30) CENSOR(varlist min==1 max==1) REFDATE(varlist min==1 max==1) REFMINUS(integer 30) REFPLUS(integer 30) ]  
 	restore 
 	* confirm newvarname does not exist 
 	if "`nogenerate'" =="" { 
@@ -28,7 +28,17 @@ program define fdiag
 		}
 	}
 	qui preserve
+	* save refdate 
+	if "`refdate'" !="" {
+		tempfile ref 
+		keep patient `refdate'
+		qui save `ref'
+	}
 	use `using', clear
+	* merge ref 
+	if "`refdate'" !="" {
+		qui merge m:1 patient using `ref', keep(match master)
+	}
 	*describe
 	if "`describe'" !="" {
 		describe
@@ -126,6 +136,22 @@ program define fdiag
 		di in red "listpatient: obs > maxdate dropped"
 		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}
+	* refdate
+	if "`refdate'" != "" {
+		count if `refdate' ==. & _merge ==3
+		if `r(N)' > 0 {
+			display in red "`refdate' has missing values"
+			exit 198
+		}	
+		gen lb = `refdate' - `refminus'
+		gen ub = `refdate' + `refplus'
+		qui keep if inrange(icd10_date, lb, ub)  
+	}
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: not within refdate -refminus +refplus dropped"
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age `refdate' lb ub if patient =="`listpatient'", sepby(patient) 
+	}
 	* number of diagnoses 
 	qui bysort patient icd10_date: keep if _n ==1
 	if "`listpatient'" !="" {
@@ -171,6 +197,7 @@ program define fdiag
 	if "`censor'" !="" {
 		if "`y'" != "" {
 			qui replace `varlist'_y = 0 if `varlist'_d !=. & `varlist'_d > `censor'
+			qui capture replace `varlist'_n = . if `varlist'_d !=. & `varlist'_d > `censor'
 			di "--- after censoring ---"
 			tab `varlist'_y, mi
 		}

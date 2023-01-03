@@ -3,7 +3,7 @@ capture program drop sumstats
 program define sumstats
 * version 1.2  AH 16 Aug 2021 
 	syntax varlist(min=2 max=2) [if] [in] [, append(string) BRackets MIDpoint FORMAT(string) HEADing(string) INDent(integer 2) ///
-	LABELFormat CLEAN MEAN LABel(string) EXTreme MEDIAN TTEST WILCoxon PFormat(string) varsuffix(string)] 
+	LABELFormat CLEAN MEAN LABel(string) EXTreme MEDIAN TTEST WILCoxon PFormat(string) varsuffix(string) SEParator(string) ] 
 	token `varlist' 
 	marksample touse, novarlist
 		preserve
@@ -78,8 +78,10 @@ program define sumstats
 				if "`brackets'" != "" local l = "["	
 				if "`brackets'" != "" local r = "]"	
 				if "`brackets'" == "" local l = "("	
-				if "`brackets'" == "" local r = ")"				
-				qui gen e = "`l'" + p25 + "-" + p75 + "`r'"
+				if "`brackets'" == "" local r = ")"
+				if "`separator'" == "" local sep = "-"
+				if "`separator'" != "" local sep = "`separator'"
+				qui gen e = "`l'" + p25 + "`sep'" + p75 + "`r'"
 				qui drop p25 p75 
 				if "`midpoint'" != ""  qui replace e = subinstr(e, ".", "·", .) 
 				* label 

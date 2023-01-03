@@ -39,6 +39,7 @@
 {synopt:{opt pf:ormat(string)}}format p-values according to Stata format specified in string{p_end}
 {synopt:{opt ind:ent(integer)}}indent estimate label by the number of blanks specified, (default=2){p_end}
 {synopt:{opt brackets}}replace parentheses with brackets{p_end}
+{synopt:{opt sep:arator(string)}}use string as separator between p25 and p75 for option median{p_end}
 {synopt:{opt midpoint}}use midpoint as decimal point separator{p_end}
 
 

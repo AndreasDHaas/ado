@@ -34,6 +34,7 @@
 {synopt :{opt maxage(integer):}}disregards after maxage {p_end}
 {synopt :{opt n:}}generates newvar_n containing the number of diagnoses in age and date range meeting the if condition and are on different dates {p_end}
 {synopt :{opt y:}}generates the binary indicator newvar_y for the presence of a diagnosis in age and date range meeting the if condition {p_end}
+{synopt :{opt c:ode}}stores the matching ICD10 code in variable newvar_code {p_end}
 {synopt :{opt label(string):}}labels value 1 of newvar_y with string{p_end}
 {synopt :{opt list(#):}}lists diagnoses meeting the if condition of a random sample of # patients. The ado file listif is required for this option. {p_end}
 {synopt :{opt listpat:ient(patient)}}lists diagnoses of specified patient id before and after applying age and date restrictions {p_end}

@@ -17,7 +17,7 @@ program define fdiag
 		qui capture gen `var' = .
 	}	
 	* syntax 
-	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate NOTIF(string) NOTIFBEFORE(integer 30) NOTIFAFTER(integer 30) CENSOR(varlist min==1 max==1) REFDATE(varlist min==1 max==1) REFMINUS(integer 30) REFPLUS(integer 30) ]  
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate NOTIF(string) NOTIFBEFORE(integer 30) NOTIFAFTER(integer 30) CENSOR(varlist min==1 max==1) REFDATE(varlist min==1 max==1) REFMINUS(integer 30) REFPLUS(integer 30) Code ]  
 	restore 
 	* confirm newvarname does not exist 
 	if "`nogenerate'" =="" { 
@@ -27,7 +27,7 @@ program define fdiag
 			exit 198
 		}
 	}
-	qui preserve
+	preserve
 	* save refdate 
 	if "`refdate'" !="" {
 		tempfile ref 
@@ -178,7 +178,11 @@ program define fdiag
 		list patient `varlist'_* if patient =="`listpatient'", sepby(patient) 
 	}
 	* clean
-	qui keep patient `varlist'_*
+	qui keep patient icd10_code `varlist'_*
+	rename icd10_code `varlist'_code
+	if "`code'" !="" { 
+	    drop `varlist'_code
+	}
 	* order and apply n and y options
 	order patient `varlist'_d 
 	* save events

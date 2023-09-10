@@ -32,6 +32,9 @@
 {synopt :{opt maxdate(date):}}disregards codes after maxdate {p_end}
 {synopt :{opt minage(integer):}}disregards codes before minage{p_end}
 {synopt :{opt maxage(integer):}}disregards after maxage {p_end}
+{synopt :{opt refdate(varname)}}specifies codes not inrange(refdate, refdate-refminus, refdate+refplus) are dropped. Refdate can't be missing if option is specified {p_end}
+{synopt :{opt refminus(integer):}}refdate - refminus is lower bound of time window specified in refdate. default is 30{p_end}
+{synopt :{opt refplus(integer):}}refdate + refplus is uppper bound of time window specified in refdate. default is 30{p_end}
 {synopt :{opt n:}}generates newvar_n containing the number of codes in age and date range meeting the if condition and are on different dates {p_end}
 {synopt :{opt y:}}generates the binary indicator newvar_y for the presence of a pharmacy claim in age and date range meeting the if condition {p_end}
 {synopt :{opt label(string):}}labels value 1 of newvar_y with string{p_end}

@@ -17,7 +17,7 @@ program define fhos
 		qui capture gen `var' = .
 	}	
 	* syntax 
-	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate censor(varlist min==1 max==1) ]  
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate censor(varlist min==1 max==1) REFDATE(varlist min==1 max==1) REFMINUS(integer 30) REFPLUS(integer 30)]  
 	restore 
 	* confirm newvarname does not exist 
 	if "`nogenerate'" =="" { 
@@ -27,8 +27,18 @@ program define fhos
 			exit 198
 		}
 	}
-	qui preserve
+	preserve
+	* save refdate 
+	if "`refdate'" !="" {
+		tempfile ref 
+		keep patient `refdate'
+		qui save `ref'
+	}	
 	use `using', clear
+	* merge ref 
+	if "`refdate'" !="" {
+		qui merge m:1 patient using `ref', keep(match master)
+	}
 	*describe
 	if "`describe'" !="" {
 		describe
@@ -82,6 +92,17 @@ program define fhos
 	if "`listpatient'" !="" {
 		di in red "listpatient: <= maxdate"
 		list patient adm_date dis_date duration code_type hosp_code code_role code_description age if patient =="`listpatient'", sepby(patient) 
+	}
+	* refdate
+	if "`refdate'" != "" {
+		count if `refdate' ==. & _merge ==3
+		if `r(N)' > 0 {
+			display in red "`refdate' has missing values"
+			exit 198
+		}	
+		gen lb = `refdate' - `refminus'
+		gen ub = `refdate' + `refplus'
+		qui keep if inrange(adm_date, lb, ub)  
 	}
 	* number of diagnoses 
 	qui bysort patient adm_date: keep if _n ==1

@@ -3,7 +3,7 @@ capture program drop sumstats
 program define sumstats
 * version 1.2  AH 16 Aug 2021 
 	syntax varlist(min=2 max=2) [if] [in] [, append(string) BRackets MIDpoint FORMAT(string) HEADing(string) INDent(integer 2) ///
-	LABELFormat CLEAN MEAN LABel(string) EXTreme MEDIAN TTEST WILCoxon PFormat(string) varsuffix(string) SEParator(string) ] 
+	LABELFormat CLEAN MEAN LABel(string) EXTreme MEDIAN TTEST WILCoxon PFormat(string) varsuffix(string) SEParator(string) STDDIFF ] 
 	token `varlist' 
 	marksample touse, novarlist
 		preserve
@@ -132,6 +132,9 @@ program define sumstats
 				qui collapse (mean) c=`1' (sd)sd=`1' , by(`2')
 				qui gen y = _n, before(`2')  
 				qui append using `total' 
+				* Save numeric results 
+				qui gen Mean = c 
+				qui gen SD = sd 
 				* format 
 				foreach v in c sd {
 					qui format `format' `v'	
@@ -150,9 +153,15 @@ program define sumstats
 				qui gen label = "`blanks'" + "Mean (SD)"
 			}				
 			* reshape 
-			qui reshape wide c e, j(y) i(level)
+			qui reshape wide c e Mean SD, j(y) i(level)
 			order label, first
 			order level, last
+			* std diff 
+			qui gen pooled_sd = sqrt((SD1^2 + SD2^2)/2)
+			gen stddiff = abs(Mean1 - Mean2) / pooled_sd
+			qui format stddiff %3.2f
+			qui tostring stddiff, replace usedisplay force
+			qui drop Mean* SD* pooled_sd			
 			* label option 
 			if "`label'" != "" replace label = "`label'"
 			* heading 
@@ -187,6 +196,7 @@ program define sumstats
 				if "`pformat'" == "" qui gen pvalue = "`: di %4.3fc `P' '" if _n ==1, before(level)
 				if "`pformat'" != "" qui gen pvalue = "`: di `pformat' `P' '" if _n ==1, before(level)
 			}
+			if "`stddiff'" == "" drop stddiff
 			* varsuffix 
 			qui ds level var header label, not 
 			local varlist  `r(varlist)'

@@ -1,9 +1,9 @@
 
 capture program drop percentages
 program define percentages
-* version 1.0  AH 18 Apr 2021 
+* version 1.1  AH 18 Apr 2021 
 	syntax varlist(min=2 max=2) [if] [in] [, append(string) NOPERCENT PERCENTSIGN BRackets MIDpoint FREQFormat(string) PERCENTFormat(string) HEADing(string) INDent(integer 2) NOHEADing COLUMNTotals PLEVEL(numlist int max=1) ///
-	NOMIssings LABELFormat CLEAN PFormat(string) DROP(string) VAR(string) varsuffix(string) missingcode(numlist max=1) EXACT CHI] 
+	NOMIssings LABELFormat CLEAN PFormat(string) DROP(string) VAR(string) varsuffix(string) missingcode(numlist max=1) EXACT CHI STDDIFF ] 
 	token `varlist' 
 	marksample touse, novarlist
 		preserve
@@ -78,6 +78,20 @@ program define percentages
 				qui total(c`y')
 				qui replace c`y' = e(b)[1,1] if _n ==1
 				qui gen p`y' = (c`y'/c`y'[1])*100, after(c`y')
+			}
+			* stdiff 
+			if "`stddiff'" != "" {
+			* Convert percentages to proportions
+			qui gen prop1 = p1 / 100
+			qui gen prop2 = p2 / 100
+			* Calculate pooled variance
+			qui gen pooled_var = ( (prop1 * (1 - prop1)) + (prop2 * (1 - prop2)) ) / 2
+			* Calculate standardized difference
+			qui gen stddiff = abs(prop1 - prop2) / sqrt(pooled_var)
+			* Format the result
+			qui format stddiff %3.2f
+			qui tostring stddiff, replace usedisplay force
+			qui drop prop1 prop2 pooled_var
 			}
 			* format frequencies
 			forval y = 1/`t' {

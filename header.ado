@@ -3,7 +3,7 @@ capture program drop header
 program define header
 * version 1.2  AH 16 Aug 2021 
 	syntax varlist(max=1) [if] [in], [SAVing(string)] [NOPERCENT] [PERCENTSIGN] [FREQLAB(string)] [BRackets] [MIDpoint] [FREQFormat(string)] [PERCENTFormat(string) ///
-	LABELFormat(string) CLEAN VARSUffix(string) PVALue ]
+	LABELFormat(string) CLEAN VARSUffix(string) PVALue STDDIFF ]
 		marksample touse, novarlist
 		preserve
 		qui drop if !`touse'
@@ -106,16 +106,19 @@ program define header
 			qui gen header = 1 
 			* P-value 
 			qui gen pvalue ="p-value" in 1, before(level)
+			* Std. Diff
+			qui gen stddiff ="Std. diff" in 1, before(level)
 			* rename variables with suffix 
 			if "`varsuffix'" != "" {
-				foreach j of varlist label header C* E* pvalue {
+				foreach j of varlist label header C* E* pvalue stddiff {
 					rename `j' `j'`varsuffix'
 				}
 			}
 			if "`pvalue'" == "" drop pvalue 
+			if "`stddiff'" == "" drop stddiff 
 			* list 
 			if "`clean'" == "" list, sepby(header)
-			if "`clean'" != "" list label C`strMin'-E`strMax' `pvalue', sepby(header) noheader
+			if "`clean'" != "" list label C`strMin'-E`strMax' `pvalue' `stddiff', sepby(header) noheader
 			* save 
 			if "`saving'" != "" save "`saving'", replace 
 		restore 

@@ -8,6 +8,10 @@ program define sumstats
 	marksample touse, novarlist
 		preserve
 		qui drop if !`touse'
+			if ("`stddiff'" != "" & "`median'" != "") | ("`stddiff'" != "" & "`extreme'" != "") {
+				display as error "Option stddiff cannot be combined with median or extreme. Use stddiff with mean or remove this option"
+				exit 198
+			}
 			* encode string var
 			tempname encoded
             capture confirm string variable `1'
@@ -151,17 +155,20 @@ program define sumstats
 				qui drop `2'
 				qui gen level =99
 				qui gen label = "`blanks'" + "Mean (SD)"
+				qui reshape wide c e Mean SD, j(y) i(level)
+				* std diff 
+				qui gen pooled_sd = sqrt((SD1^2 + SD2^2)/2)
+				gen stddiff = abs(Mean1 - Mean2) / pooled_sd
+				qui format stddiff %3.2f
+				qui tostring stddiff, replace usedisplay force
+				qui drop Mean* SD* pooled_sd
 			}				
 			* reshape 
-			qui reshape wide c e Mean SD, j(y) i(level)
+			else { 
+				qui reshape wide c e, j(y) i(level)
+			}
 			order label, first
 			order level, last
-			* std diff 
-			qui gen pooled_sd = sqrt((SD1^2 + SD2^2)/2)
-			gen stddiff = abs(Mean1 - Mean2) / pooled_sd
-			qui format stddiff %3.2f
-			qui tostring stddiff, replace usedisplay force
-			qui drop Mean* SD* pooled_sd			
 			* label option 
 			if "`label'" != "" replace label = "`label'"
 			* heading 

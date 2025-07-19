@@ -17,7 +17,7 @@ program define fdrug
 		qui capture gen `var' = .
 	}	
 	* syntax 
-	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate censor(varlist min==1 max==1) REFDATE(varlist min==1 max==1) REFMINUS(integer 30) REFPLUS(integer 30)] 
+	syntax newvarname using [if] , [ MINDATE(string) MAXDATE(string) MINAGE(integer -999) MAXAGE(integer 999) LABel(string) N Y LIST(integer 0) LISTPATient(string) DESCribe NOGENerate censor(varlist min==1 max==1) REFDATE(varlist min==1 max==1) REFMINUS(integer 30) REFPLUS(integer 30) START(varname numeric) END(varname numeric)] 
 	restore 
 	* confirm newvarname does not exist 
 	if "`nogenerate'" =="" { 
@@ -28,15 +28,30 @@ program define fdrug
 		}
 	}
 	qui preserve
-	* save refdate 
-	if "`refdate'" !="" {
+	* save refdate start & end 
+	if "`refdate'" !="" | "`start'" !="" | "`end'" !="" {
 		tempfile ref 
-		keep patient `refdate'
+		keep patient `refdate' `start' `end'
 		qui save `ref'
 	}
+	* confirm start & end have no missing values 
+	if "`start'" != "" {
+		qui count if missing(`start')
+		if r(N) > 0 {
+			di in red "Warning: `start' has missing values"
+			exit 198
+		}
+	}
+	if "`end'" != "" {
+		qui count if missing(`end')
+		if r(N) > 0 {
+			di in red "Warning: `end' has missing values"
+			exit 198
+		}
+	}	
 	use `using', clear
 	* merge ref 
-	if "`refdate'" !="" {
+	if "`refdate'" !="" | "`start'" !="" | "`end'" !="" {
 		qui merge m:1 patient using `ref', keep(match master)
 	}
 	*describe
@@ -77,6 +92,20 @@ program define fdrug
 		di in red "listpatient: <= maxage"
 		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
 	}
+	* start
+	if "`start'" != "" qui drop if icd10_date < `start'
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: obs < start dropped"
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
+	}	
+	* end
+	if "`end'" != "" qui drop if icd10_date > `end' & icd10_date !=. 
+	* listpatient
+	if "`listpatient'" !="" {
+		di in red "listpatient: obs > end dropped"
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
+	}	
 	* mindate 
 	if "`mindate'" != "" qui drop if med_sd < `mindate'
 	* listpatient

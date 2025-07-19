@@ -151,7 +151,6 @@ program define fdiag
 		di in red "listpatient: obs > end dropped"
 		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}	
-	
 	* mindate 
 	if "`mindate'" != "" qui drop if icd10_date < `mindate'
 	* listpatient

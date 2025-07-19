@@ -27,7 +27,7 @@ program define fdrug
 			exit 198
 		}
 	}
-	qui preserve
+	preserve
 	* save refdate start & end 
 	if "`refdate'" !="" | "`start'" !="" | "`end'" !="" {
 		tempfile ref 
@@ -93,14 +93,14 @@ program define fdrug
 		list patient med_sd med_id quantity strength nappi_code nappi_suffix nappi_description age if patient =="`listpatient'", sepby(patient) 
 	}
 	* start
-	if "`start'" != "" qui drop if icd10_date < `start'
+	if "`start'" != "" qui drop if med_sd < `start'
 	* listpatient
 	if "`listpatient'" !="" {
 		di in red "listpatient: obs < start dropped"
 		list patient icd10_date discharge_date icd10_code source icd10_type code_role age if patient =="`listpatient'", sepby(patient) 
 	}	
 	* end
-	if "`end'" != "" qui drop if icd10_date > `end' & icd10_date !=. 
+	if "`end'" != "" qui drop if med_sd > `end' & med_sd !=. 
 	* listpatient
 	if "`listpatient'" !="" {
 		di in red "listpatient: obs > end dropped"

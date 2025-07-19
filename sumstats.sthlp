@@ -42,6 +42,8 @@
 {synopt:{opt sep:arator(string)}}use string as separator between p25 and p75 for option median{p_end}
 {synopt:{opt midpoint}}use midpoint as decimal point separator{p_end}
 
+{syntab:Standardized differences}
+{synopt:{opt stddiff}}report standardized mean difference between two groups. Option can only be used for means {p_end}
 
 {syntab:Advanced}
 {synopt:{opt varsu:ffix(string)}}rename all variables in table with suffix{p_end}

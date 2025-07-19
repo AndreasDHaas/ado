@@ -48,6 +48,9 @@
 {synopt:{opt chi}}report Pearson's chi-squared{p_end}
 {synopt:{opt missingcode(integer)}}excludes specified value from chi-squared and Fisher's exact statistics{p_end}
 
+{syntab:Standardized differences}
+{synopt:{opt stddiff}}report standardized difference between two groups{p_end}
+
 {syntab:Advanced}
 {synopt:{opt varsu:ffix(string)}}rename all variables in table with suffix{p_end}
 {synopt:{opt plevel(integer)}}report the p-value in the level specified in integer{p_end}

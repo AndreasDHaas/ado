@@ -30,6 +30,8 @@
 {syntab :Options}
 {synopt :{opt mindate(date):}}disregards diagnoses before mindate {p_end}
 {synopt :{opt maxdate(date):}}disregards diagnoses after maxdate {p_end}
+{synopt :{opt start(date):}}disregards diagnoses before start date {p_end}
+{synopt :{opt end(date):}}disregards diagnoses after end date {p_end}
 {synopt :{opt minage(integer):}}disregards diagnoses before minage{p_end}
 {synopt :{opt maxage(integer):}}disregards after maxage {p_end}
 {synopt :{opt n:}}generates newvar_n containing the number of diagnoses in age and date range meeting the if condition and are on different dates {p_end}

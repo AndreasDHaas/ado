@@ -179,7 +179,7 @@ program define fdiag
 	* listpatient
 	if "`listpatient'" !="" {
 		di in red "listpatient: not within refdate -refminus +refplus dropped"
-		list patient icd10_date discharge_date icd10_code source icd10_type code_role age `refdate' lb ub if patient =="`listpatient'", sepby(patient) 
+		list patient icd10_date discharge_date icd10_code source icd10_type code_role age `refdate' if patient =="`listpatient'", sepby(patient) 
 	}
 	* number of diagnoses 
 	qui bysort patient icd10_date: keep if _n ==1

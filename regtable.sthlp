@@ -24,6 +24,7 @@
 
 {syntab:Main}
 {synopt:{opt save(filepath)}}saves table {p_end}
+{synopt:{opt saveold(filepath)}}saves table in Stata version 12. Does not work with append or merge {p_end}
 {synopt:{opt append(filepath)}}appends table {p_end}
 {synopt:{opt merge(filepath)}}merges table based on var {p_end}
 {synopt:{opt mergeid(varlist)}}merges table based on mergid if merge is specified {p_end}

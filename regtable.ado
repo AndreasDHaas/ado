@@ -2,7 +2,7 @@
 capture program drop regtable	
 program define regtable
 * version 1.0  AH 28 May 2022 
-	syntax varlist(min=1) [, SAVE(string) APPEND(string) EFORM DROP(string) KEEP(string) FORMAT(string) HEADING BRACKETS INDENT(int 2) LABELFormat DROPCOEFficient(string) name(string) number(int -999) VARSUFfix(string) CLEAN MIDpoint BASELEVels CISEParator(string) MERGE(string) MERGEID(string) COLLAB(string) ESTLAB(string) SORT(string) BASELABel(string)] 
+	syntax varlist(min=1) [, SAVE(string) SAVEOLD(string) APPEND(string) EFORM DROP(string) KEEP(string) FORMAT(string) HEADING BRACKETS INDENT(int 2) LABELFormat DROPCOEFficient(string) name(string) number(int -999) VARSUFfix(string) CLEAN MIDpoint BASELEVels CISEParator(string) MERGE(string) MERGEID(string) COLLAB(string) ESTLAB(string) SORT(string) BASELABel(string)] 
 	* Indentation  
 		forvalues iteration = 1/`indent' {
 			local blanks = "`blanks'" + " "
@@ -163,6 +163,11 @@ program define regtable
 			if "`save'" != "" {
 				if "`sort'" != "" sort `sort' // sort option 
 				save `save', replace 
+			}
+			* saveold 
+			if "`saveold'" != "" {
+				if "`sort'" != "" sort `sort' // sort option 
+				saveold `saveold', replace version(12)
 			}
 			* append 
 			if "`append'" != "" {

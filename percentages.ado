@@ -69,7 +69,7 @@ program define percentages
 			clear
 			qui svmat2 freq, names(col)
 			* total column 
-			qui egen c`t' = rowtotal(c*)
+			qui egen c`t' = rowtotal(c1-c`col')
 			* column totals & column percentages 
 			qui set obs `=_N+1'
 			qui replace `1' = `min' - 1 if _n ==_N

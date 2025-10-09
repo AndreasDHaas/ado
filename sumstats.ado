@@ -203,7 +203,7 @@ program define sumstats
 				if "`pformat'" == "" qui gen pvalue = "`: di %4.3fc `P' '" if _n ==1, before(level)
 				if "`pformat'" != "" qui gen pvalue = "`: di `pformat' `P' '" if _n ==1, before(level)
 			}
-			if "`stddiff'" == "" drop stddiff
+			if "`stddiff'" == "" capture drop stddiff
 			* varsuffix 
 			qui ds level var header label, not 
 			local varlist  `r(varlist)'

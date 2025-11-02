@@ -45,7 +45,7 @@ program define header
 				qui replace c`y' = c`y'[`y'] 
 			}
 			* total column 
-			qui egen c`t' = rowtotal(c*)
+			qui egen c`t' = rowtotal(c1-c`m')
 			qui keep if _n ==1
 			* percentages 
 			forval y = 1/`t' {
